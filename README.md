@@ -134,8 +134,8 @@ This app uses a single shared password (`GEM_PASS`) because only one or two peop
 
 - **What's at stake.** The database contains dates and hour counts; that's it. A worst-case breach means someone sees or deletes therapy hour totals, which is annoying but not dangerous.
 
-- **Use a strong password.** Automated scanners crawl public Connect Cloud URLs and try common passwords. Make `GEM_PASS` a random string of 16+ characters There's no brute-force protection in the app, so a weak password is the single biggest risk.
+- **Use a strong password.** Automated scanners crawl public Connect Cloud URLs and try common passwords. Make `GEM_PASS` a random string of 16+ characters. There's no brute-force protection in the app, so a weak password is the single biggest risk.
 
-- **Scope your database role.** The default Supabase user is a superuser. The `gemnotes_app` role in the setup section limits access to just the `hours` table, so a leaked `GEM_SUPA_PASS` can't touch anything else in your project.
+- **Scope your database role.** The default Supabase user is a superuser. The `gemnotes_app` role in the setup section limits access to just the `hours` table, so a leaked `GEM_SUPA_PASS` can only affect one table.
 
-- **Back up your data.** The Export Report tab includes a full CSV dump of your hours; download your data periodically and keep it somewhere safe. On the database side, Supabase offers point-in-time recovery on paid plans.
+- **Back up your data.** The "Export Report" tab includes a CSV dump of your data; download your data periodically and keep it somewhere safe. On the database side, Supabase offers point-in-time recovery on paid plans.
