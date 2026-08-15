@@ -1,0 +1,135 @@
+---
+title: "Therapy Hours Report"
+format:
+  pdf:
+    documentclass: article
+    geometry: "margin=1in"
+    fontsize: 11pt
+params:
+  data_path: ""
+  start_date: ""
+  end_date: ""
+---
+
+```{=latex}
+\vspace{-2cm}
+```
+
+```{r}
+#| include: false
+library(dplyr)
+library(knitr)
+library(kableExtra)
+
+hours_data <- readRDS(params$data_path)
+
+groups <- list(
+  list(
+    label = "Clinical Hours",
+    cols = c(
+      individual = "Individual Therapy",
+      relational_couple = "Couple Therapy",
+      relational_family = "Family Therapy"
+    )
+  ),
+  list(
+    label = "Supervision Hours",
+    cols = c(
+      supervision_individual = "Individual Supervision",
+      supervision_group = "Group Supervision"
+    )
+  ),
+  list(
+    label = "Admin/Other Hours",
+    cols = c(
+      consultation = "Consultation",
+      case_notes = "Case Notes",
+      session_plan = "Session Planning",
+      emails = "Emails",
+      letters = "Letters",
+      staff_meetings = "Staff Meetings",
+      cont_ed = "Continuing Education",
+      exam_prep = "Exam Preparation"
+    )
+  )
+)
+
+category_total <- function(df, col) {
+  if (!(col %in% names(df))) return(NA_real_)
+  total <- sum(df[[col]], na.rm = TRUE)
+  if (total == 0) return(NA_real_)
+  total
+}
+
+build_summary_rows <- function(df, col_map) {
+  totals <- sapply(names(col_map), function(cn) category_total(df, cn))
+  keep <- !is.na(totals)
+  if (!any(keep)) return(NULL)
+  data.frame(
+    Category = unname(col_map[keep]),
+    Hours = round(totals[keep], 1),
+    row.names = NULL
+  )
+}
+
+summary_rows <- data.frame(Category = character(), Hours = numeric())
+pack_ranges <- list()
+subtotal_rows <- integer()
+grand_total <- 0
+
+for (g in groups) {
+  rows <- build_summary_rows(hours_data, g$cols)
+  if (is.null(rows)) next
+
+  start <- nrow(summary_rows) + 1
+  summary_rows <- bind_rows(summary_rows, rows)
+  pack_ranges[[length(pack_ranges) + 1]] <- list(label = g$label, start = start, end = nrow(summary_rows))
+
+  subtotal <- sum(rows$Hours)
+  grand_total <- grand_total + subtotal
+  summary_rows <- bind_rows(
+    summary_rows,
+    data.frame(Category = paste(g$label, "Subtotal"), Hours = round(subtotal, 1))
+  )
+  subtotal_rows <- c(subtotal_rows, nrow(summary_rows))
+}
+
+summary_rows <- bind_rows(summary_rows, data.frame(Category = "Grand Total", Hours = round(grand_total, 1)))
+grand_total_row <- nrow(summary_rows)
+```
+
+**Clinician:** Julia Jorgensen
+
+**Report Period:** `r format(as.Date(params$start_date), "%B %d, %Y")` to `r format(as.Date(params$end_date), "%B %d, %Y")`
+
+## Hours Summary
+
+```{r}
+#| echo: false
+tbl <- kbl(
+  summary_rows,
+  booktabs = TRUE,
+  align = c("l", "r"),
+  col.names = c("Category", "Hours")
+) %>%
+  kable_styling(latex_options = c("hold_position"), full_width = FALSE)
+
+for (r in subtotal_rows) {
+  tbl <- tbl %>% row_spec(r, bold = TRUE, hline_after = TRUE)
+}
+tbl <- tbl %>% row_spec(grand_total_row, bold = TRUE, hline_after = TRUE)
+
+for (p in pack_ranges) {
+  tbl <- tbl %>% pack_rows(p$label, p$start, p$end)
+}
+
+tbl
+```
+
+\vspace{2cm}
+
+Supervising Therapist Signature: \underline{\hspace{10cm}}
+
+\vspace{1cm}
+
+Date: \underline{\hspace{6cm}}
