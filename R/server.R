@@ -264,18 +264,29 @@ server <- function(
   observeEvent(input$save_goals, {
     req(authenticated())
 
-    users$update_user_config(
-      pool,
-      user_id(),
-      total_hours_goal = input$acct_total_hours_goal,
-      therapy_hours_goal = input$acct_therapy_hours_goal,
-      relational_hours_goal = input$acct_relational_hours_goal,
-      supervision_individual_goal = input$acct_supervision_individual_goal,
-      supervision_group_goal = input$acct_supervision_group_goal,
-      admin_hours_goal = input$acct_admin_hours_goal
+    result <- tryCatch(
+      {
+        users$update_user_config(
+          pool,
+          user_id(),
+          total_hours_goal = input$acct_total_hours_goal,
+          therapy_hours_goal = input$acct_therapy_hours_goal,
+          relational_hours_goal = input$acct_relational_hours_goal,
+          supervision_individual_goal = input$acct_supervision_individual_goal,
+          supervision_group_goal = input$acct_supervision_group_goal,
+          admin_hours_goal = input$acct_admin_hours_goal
+        )
+        TRUE
+      },
+      error = function(e) e
     )
-    user_cfg(users$get_user_config(pool, user_id()))
-    showNotification("Goals saved.", type = "message")
+
+    if (isTRUE(result)) {
+      user_cfg(users$get_user_config(pool, user_id()))
+      showNotification("Goals saved.", type = "message")
+    } else {
+      showNotification(paste("Couldn't save goals:", conditionMessage(result)), type = "error")
+    }
   })
 
   signup_waiter <- waiter::Waiter$new(

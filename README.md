@@ -53,6 +53,14 @@ create policy users_insert_self on public.users
     google_sub = nullif(current_setting('app.pending_sub', true), '')
   );
 
+create policy users_update_own on public.users
+  for update using (
+    id = nullif(current_setting('app.user_id', true), '')::uuid
+  )
+  with check (
+    id = nullif(current_setting('app.user_id', true), '')::uuid
+  );
+
 create policy users_delete_own on public.users
   for delete using (
     id = nullif(current_setting('app.user_id', true), '')::uuid

@@ -72,11 +72,12 @@ get_user_config <- function(pool, user_id) {
 #' @param pool Database connection
 #' @param user_id UUID of the signed-in user
 #' @param total_hours_goal,therapy_hours_goal,relational_hours_goal,supervision_individual_goal,supervision_group_goal,admin_hours_goal Licensure goals
+#' @return Nothing. Errors if RLS or a bad user_id caused zero rows to update.
 #' @export
 update_user_config <- function(pool, user_id,
                                 total_hours_goal, therapy_hours_goal, relational_hours_goal,
                                 supervision_individual_goal, supervision_group_goal, admin_hours_goal) {
-  dbExecute(
+  rows_updated <- dbExecute(
     pool,
     "UPDATE users SET
       total_hours_goal = $2, therapy_hours_goal = $3, relational_hours_goal = $4,
@@ -88,6 +89,9 @@ update_user_config <- function(pool, user_id,
       supervision_individual_goal, supervision_group_goal, admin_hours_goal
     )
   )
+  if (rows_updated == 0) {
+    stop("Failed to save goals: no matching user row (check RLS update policy).")
+  }
   invisible(NULL)
 }
 
