@@ -1,16 +1,10 @@
 app_title: "Gem Notes"
-db_host: "aws-0-us-east-2.pooler.supabase.com"
+db_host: "<aws-location>.pooler.supabase.com"
 db_port: 5432
 db_name: "postgres"
-db_user: "postgres.<project-ref>"
+db_user: "gemnotes_app.<project-ref>"
 table_name: "hours"
-total_hours_goal: 4000
-therapy_hours_goal: 1000
-relational_hours_goal: 500
-supervision_individual_goal: 150
-supervision_group_goal: 50
-admin_hours_goal: 2800
-# Placeholders (do not commit copyrighted material)
+google_client_id: "<client-id>.apps.googleusercontent.com"
 quotes:
   - "I love you.<br>- Dylan Pieper"
   - "You are loved.<br>- Dylan Pieper"

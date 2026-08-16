@@ -5,8 +5,8 @@ box::use(
     conditionalPanel,
     div,
     h2,
-    passwordInput,
     actionButton,
+    actionLink,
     sliderInput,
     uiOutput,
     span
@@ -14,7 +14,7 @@ box::use(
   shinyjs[useShinyjs],
   waiter[use_waiter, waiter_preloader, spin_heart],
   bsicons[bs_icon],
-  bslib[card, card_header, card_body, page_navbar, navbar_options, nav_panel, page_fillable],
+  bslib[card, card_header, card_body, page_navbar, navbar_options, nav_panel, nav_spacer, nav_item, page_fillable],
   plotly[plotlyOutput],
 )
 
@@ -91,19 +91,27 @@ app_css <- tags$style(
   .gem-logo {
     flex-shrink: 0;
   }
-  #login_container {
+  #login_container, #signup_wizard_container {
     background-color: #fdf0f7;
   }
-  #login_container .card {
+  #login_container .card, #signup_wizard_container .card {
     border-top: 4px solid #C11C84;
   }
-  #login_container .btn-primary {
+  #login_container .btn-primary, #signup_wizard_container .btn-primary {
     background-color: #C11C84;
     border-color: #C11C84;
   }
-  #login_container .btn-primary:hover {
+  #login_container .btn-primary:hover, #signup_wizard_container .btn-primary:hover {
     background-color: #9c1568;
     border-color: #9c1568;
+  }
+  .compact-hours-form label {
+    margin-bottom: 0.1rem;
+    font-size: 0.8rem;
+  }
+  .compact-hours-form .form-control {
+    padding: 0.25rem 0.5rem;
+    height: calc(1.5em + 0.5rem + 2px);
   }
 "
 )
@@ -124,9 +132,10 @@ gem_logo <- function(size = 20, variant = c("white", "pink")) {
 }
 
 #' @param app_title App name shown on the login screen and navbar
+#' @param google_client_id Google OAuth Web application Client ID (config.yml google_client_id)
 #' @param ui_components ui_components module (see R/ui_components.R)
 #' @export
-build_ui <- function(app_title, ui_components) {
+build_ui <- function(app_title, google_client_id, ui_components) {
 tagList(
   useShinyjs(),
   use_waiter(),
@@ -135,24 +144,20 @@ tagList(
       rel = "shortcut icon",
       href = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>💎</text></svg>"
     ),
+    tags$script(src = "https://accounts.google.com/gsi/client", async = NA, defer = NA),
     tags$script(
       "
-      $(document).ready(function() {
-        // Capture Enter key on password field
-        $('#password').on('keyup', function(e) {
-          if(e.keyCode == 13) {
-            Shiny.setInputValue('validate_password', true, {priority: 'event'});
-          }
-        });
-      });
-    "
+      function onGoogleCredential(response) {
+        Shiny.setInputValue('google_credential', response.credential, {priority: 'event'});
+      }
+      "
     )
   ),
   app_css,
   waiter_preloader(html = spin_heart(), color = "#C11C84"),
 
   conditionalPanel(
-    condition = "!output.is_authenticated",
+    condition = "!output.is_authenticated && !output.needs_signup",
     div(
       id = "login_container",
       class = "container-fluid vh-100 d-flex align-items-center justify-content-center",
@@ -167,20 +172,25 @@ tagList(
             gem_logo(28, "pink"),
             h2(app_title, class = "mb-0")
           ),
-          passwordInput("password", "Password"),
           div(
-            class = "d-grid gap-2",
-            actionButton(
-              "login",
-              "Login",
-              class = "btn btn-primary btn-lg"
-            )
+            id = "g_id_onload",
+            `data-client_id` = google_client_id,
+            `data-callback` = "onGoogleCredential",
+            `data-auto_prompt` = "false"
+          ),
+          div(
+            class = "g_id_signin d-flex justify-content-center",
+            `data-type` = "standard",
+            `data-shape` = "pill",
+            `data-theme` = "outline",
+            `data-text` = "signin_with",
+            `data-size` = "large"
           ),
           div(
             id = "login_error",
             class = "alert alert-danger mt-3",
             style = "display: none;",
-            "Incorrect password"
+            "Couldn't sign you in with Google. Please try again."
           )
         )
       )
@@ -188,8 +198,14 @@ tagList(
   ),
 
   conditionalPanel(
+    condition = "output.needs_signup",
+    ui_components$signup_wizard_ui
+  ),
+
+  conditionalPanel(
     condition = "output.is_authenticated",
     page_navbar(
+      id = "main_navbar",
       title = div(
         class = "d-flex align-items-center gap-2",
         gem_logo(24, "white"),
@@ -285,7 +301,27 @@ tagList(
         )
       ),
       nav_panel(title = "Track Hours", ui_components$track_hours_ui),
-      nav_panel(title = "Export Report", ui_components$export_report_ui)
+      nav_panel(title = "Export Report", ui_components$export_report_ui),
+      nav_spacer(),
+      nav_panel(
+        title = tags$span(
+          bs_icon("gear-fill", size = "1.3em"),
+          title = "Account",
+          style = "color: #fff; opacity: 1;"
+        ),
+        ui_components$account_ui
+      ),
+      nav_item(
+        actionLink(
+          "logout",
+          tags$span(
+            bs_icon("box-arrow-right", size = "1.3em"),
+            title = "Log out",
+            style = "color: #fff; opacity: 1;"
+          ),
+          class = "nav-link"
+        )
+      )
     )
   )
 )

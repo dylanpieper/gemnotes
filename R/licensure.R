@@ -3,31 +3,20 @@ box::use(
   shiny[div, span, h5, p],
 )
 
-#' Validate and return the configured hours table name for SQL interpolation
-get_table_name <- function(config) {
-  tbl <- config$get_config()$table_name
-  if (!grepl("^[A-Za-z_][A-Za-z0-9_]*$", tbl)) {
-    stop("Invalid table_name in config.yml: must be a valid SQL identifier")
-  }
-  tbl
-}
-
 #' Get licensure progress metrics
 #' @param pool Database connection pool
-#' @param config config module (see R/config.R)
+#' @param tbl Hours table name (see db$get_table_name)
+#' @param user_cfg Named list of the signed-in user's tracking goals (see R/users.R get_user_config)
 #' @return Named list with licensure progress metrics
 #' @export
-get_licensure_progress <- function(pool, config) {
-  cfg <- config$get_config()
-  tbl <- get_table_name(config)
-
-  TOTAL_REQUIRED <- cfg$total_hours_goal
-  THERAPY_REQUIRED <- cfg$therapy_hours_goal
-  RELATIONAL_REQUIRED <- cfg$relational_hours_goal
+get_licensure_progress <- function(pool, tbl, user_cfg) {
+  TOTAL_REQUIRED <- user_cfg$total_hours_goal
+  THERAPY_REQUIRED <- user_cfg$therapy_hours_goal
+  RELATIONAL_REQUIRED <- user_cfg$relational_hours_goal
   INDIVIDUAL_REQUIRED <- THERAPY_REQUIRED - RELATIONAL_REQUIRED
-  SUPERVISION_INDIVIDUAL_REQUIRED <- cfg$supervision_individual_goal
-  SUPERVISION_GROUP_REQUIRED <- cfg$supervision_group_goal
-  ADMIN_REQUIRED <- cfg$admin_hours_goal
+  SUPERVISION_INDIVIDUAL_REQUIRED <- user_cfg$supervision_individual_goal
+  SUPERVISION_GROUP_REQUIRED <- user_cfg$supervision_group_goal
+  ADMIN_REQUIRED <- user_cfg$admin_hours_goal
 
   track_relational <- RELATIONAL_REQUIRED > 0
   track_supervision_individual <- SUPERVISION_INDIVIDUAL_REQUIRED > 0
@@ -68,6 +57,7 @@ get_licensure_progress <- function(pool, config) {
   )
 
   result <- dbGetQuery(pool, query)
+  result[is.na(result)] <- 0 # brand-new accounts have zero rows, so every SUM() comes back NULL/NA
 
   safe_percent <- function(completed, required) {
     if (required <= 0) return(0)

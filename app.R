@@ -1,8 +1,10 @@
 box::use(
-  shiny[shinyApp, onStop],
+  shiny[shinyApp],
   R / config,
   R / utils,
   R / db,
+  R / auth,
+  R / users,
   R / licensure,
   R / ui_components,
   R / plots,
@@ -11,24 +13,19 @@ box::use(
   R / server,
 )
 
-app_title <- config$get_config()$app_title
-
-pool <- db$connect(config)
-
-onStop(function() {
-  db$disconnect(pool)
-})
+cfg <- config$get_config()
 
 shinyApp(
-  ui = dashboard$build_ui(app_title, ui_components),
+  ui = dashboard$build_ui(cfg$app_title, cfg$google_client_id, ui_components),
   server = function(input, output, session) {
     server$server(
       input,
       output,
       session,
-      pool,
       config,
       db,
+      auth,
+      users,
       licensure,
       ui_components,
       utils,

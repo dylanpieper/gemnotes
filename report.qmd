@@ -9,6 +9,7 @@ params:
   data_path: ""
   start_date: ""
   end_date: ""
+  clinician_name: ""
 ---
 
 ```{=latex}
@@ -98,7 +99,7 @@ summary_rows <- bind_rows(summary_rows, data.frame(Category = "Grand Total", Hou
 grand_total_row <- nrow(summary_rows)
 ```
 
-**Clinician:** Julia Jorgensen
+**Clinician:** `r params$clinician_name`
 
 **Report Period:** `r format(as.Date(params$start_date), "%B %d, %Y")` to `r format(as.Date(params$end_date), "%B %d, %Y")`
 
