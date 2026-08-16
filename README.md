@@ -1,6 +1,6 @@
 # gemnotes
 
-A Shiny app for tracking clinical licensure hours—individual and relational therapy, supervision, consultation, and admin work—with configurable goals, hour entries/editing, data summaries, interactive visualizations, and report generation for supervisor sign-off.
+A Shiny app for tracking clinical licensure hours—individual and relational therapy, supervision, consultation, and admin work—with configurable goals, hour entries/editing, data summaries, interactive visualizations, and report generation for supervisor sign-off. Multi-user, with Google Sign-In: each therapist gets their own private account and hours.
 
 ## Story
 
@@ -8,28 +8,60 @@ I built this app for my wife, Julia ❤️, so she could track her hours toward 
 
 ## Dear Therapists
 
-This page might be confusing to you. If you want to use this app to track your own hours toward licensure, please email me at dylanpieper@gmail.com. I will help you set it up in exchange for a ☕.
-
-## Look and Feel
-
-![Dashboard](img/dashboard.png)
-![Track Hours](img/tracking.png)
-![Export Report](img/reporting.png)
+If you want to use this app to track your own hours toward licensure, head to [gemnotes](https://dylanpieper-gemnotes.share.connect.posit.cloud/) and sign in with your Google account; your data is private to you, and you can delete your account and everything in it at any time from the Account tab. Questions? [Start an issue](https://github.com/dylanpieper/gemnotes/issues) if you're a developer, or email me at dylanpieper@gmail.com if you're a therapist.
 
 ## Requirements
 
-- R (>= 4.3)
-- [renv](https://rstudio.github.io/renv/) (`renv::restore()` installs the packages used)
-- A Supabase (Postgres) project
+- Use R version 4.3 or a later version.
+- Use [renv](https://rstudio.github.io/renv/). Run `renv::restore()` to install the R packages.
+- Create a Supabase (Postgres) project.
 
 ## Setup
 
 ### 1. Supabase
 
-Create an [account / project](https://supabase.com/), then run this in the SQL editor:
+Create a Supabase account and a project at [supabase.com](https://supabase.com/). Go to the SQL editor. Run this SQL command:
 
 ```sql
+create extension if not exists pgcrypto; -- for gen_random_uuid()
+
+create table public.users (
+  id uuid primary key default gen_random_uuid(),
+  google_sub text not null unique,        -- Google's stable 'sub' claim
+  email text not null,
+  name text,
+  total_hours_goal integer not null default 4000,
+  therapy_hours_goal integer not null default 1000,
+  relational_hours_goal integer not null default 500,
+  supervision_individual_goal integer not null default 100,
+  supervision_group_goal integer not null default 100,
+  admin_hours_goal integer not null default 2800,
+  policy_accepted_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+alter table public.users enable row level security;
+
+create policy users_select_own on public.users
+  for select using (
+    id = nullif(current_setting('app.user_id', true), '')::uuid
+    or google_sub = nullif(current_setting('app.pending_sub', true), '')
+  );
+
+create policy users_insert_self on public.users
+  for insert with check (
+    google_sub = nullif(current_setting('app.pending_sub', true), '')
+  );
+
+create policy users_delete_own on public.users
+  for delete using (
+    id = nullif(current_setting('app.user_id', true), '')::uuid
+  );
+
 create table public.hours (
+  id bigserial primary key,
+  user_id uuid not null references public.users(id) on delete cascade
+    default current_setting('app.user_id', true)::uuid,
   start_date date not null,
   individual numeric(4, 1) not null default 0,
   relational_couple numeric(4, 1) not null default 0,
@@ -58,9 +90,25 @@ create table public.hours (
   constraint weekly_therapy_hours_supervision_group_check check ((supervision_group >= (0)::numeric)),
   constraint weekly_therapy_hours_supervision_individual_check check ((supervision_individual >= (0)::numeric))
 ) TABLESPACE pg_default;
+
+alter table public.hours enable row level security;
+
+create policy hours_user_scoped on public.hours
+  using (user_id = nullif(current_setting('app.user_id', true), '')::uuid)
+  with check (user_id = nullif(current_setting('app.user_id', true), '')::uuid);
 ```
 
-Posit Connect Cloud doesn't support direct connections (IPv6), so this app uses Supabase's session pooler instead. If you're using Connect, Grab your connection details from **Project Settings → Database → Connect**, under "Session pooler": host, port, database, and user. Put those four variables in `config.yml` (or `config_prod.yml`) as `db_host`, `db_port`, `db_name`, `db_user`. The password stays a secret in `GEM_SUPA_PASS`:
+The `nullif(..., '')` function is important here. Some connection poolers send an empty string for a session variable that is not set. They do not send a null value. A direct conversion of an empty string to a `uuid` value causes an error. A conversion of a null value to a `uuid` value does not cause an error. This method makes sure that a connection before sign-in gets zero rows, and not an error.
+
+All accounts use the same `hours` table and the same `users` table. Postgres row-level security (RLS) keeps the rows of each user private. The app checks the ID token. Immediately after this check, the app sets a session variable named `app.pending_sub` on the database connection. This variable limits `users` table lookups and new-account inserts to one Google account, before a `user_id` value exists. After sign-in or account creation, the app sets a variable named `app.user_id`. This variable limits every other query, including queries on the `hours` table, to the rows of that user. Refer to `R/users.R` for the parameterized queries that operate on the `users` table.
+
+Posit Connect Cloud does not support direct connections to the database. This app uses the Supabase session pooler instead. If you use Connect, do this procedure to get the connection data:
+
+1. Go to **Project Settings → Database → Connect**.
+2. Find the **Session pooler** area.
+3. Get these four values: host, port, database name, and user.
+
+Put these four values in `config.yml`. Use the keys `db_host`, `db_port`, `db_name`, and `db_user`. Put the password in the `GEM_SUPA_PASS` secret. Do not put the password in this file:
 
 ```yaml
 db_host: "aws-0-us-east-2.pooler.supabase.com"
@@ -69,50 +117,60 @@ db_name: "postgres"
 db_user: "postgres.<project-ref>"
 ```
 
-**For security conscious developers:** the default user (`postgres.<project-ref>`) is a superuser over the whole project. Scoping a role to just `hours` means a leaked password only exposes one table instead of everything:
+**Necessary step: create a database role with limited rights.** Do not use `postgres.<project-ref>` as the `db_user` value. This role is a superuser role. Postgres does not apply RLS to a superuser role, and does not apply RLS to the owner of a table. If the app connects with the `postgres.<project-ref>` role, RLS has no effect. Then, every account can read and write the hours of every other account.
+
+Create a different role. Run this SQL command in the Supabase SQL editor:
 
 ```sql
-create role gemnotes_app with login password 'password';
+create role gemnotes_app with login password 'pick-a-strong-password';
 grant usage on schema public to gemnotes_app;
-grant select, insert, update, delete on public.hours to gemnotes_app;
+grant select, insert, update, delete on public.hours, public.users to gemnotes_app;
+grant usage, select on all sequences in schema public to gemnotes_app;
 ```
 
-Supavisor (the pooler) is flexible, so any login role works through the same host/port. In this case, set `db_user: "gemnotes_app.<project-ref>"` in your config.
+Set the `db_user` value to `gemnotes_app.<project-ref>` in `config.yml`. Use the same `<project-ref>` value from the connection data above. Put the password for this role in `GEM_SUPA_PASS`. Do not use the superuser password. The Supavisor pooler accepts a login role with the same host and the same port. This role works with the connection settings that you already have.
 
-### 2. Config
+### 2. Google Sign-In
 
-Settings and licensure goals live in `config.yml`. Copy it to `config_prod.yml` for deployment. The app prefers `config_prod.yml` when present, so it's gitignored and can hold real values and copyrighted quotes, if your heart desires:
+Do this procedure to create a Google Cloud OAuth client ID:
+
+1. Go to [console.cloud.google.com](https://console.cloud.google.com/apis/credentials).
+2. Select **APIs & Services → Credentials → Create Credentials → OAuth client ID**.
+3. Select **Web application** as the application type.
+
+- In the **Authorized JavaScript origins** area, add `http://127.0.0.1:PORT`. Use this address for local development. Use the port number that `shiny::runApp()` selects. Also add your deployment URL, for example your Posit Connect Cloud URL. Add the deployment URL now, if you know it. If you do not know it, add it after you deploy the app.
+- Do not add a redirect URI. Do not use the client secret. The app checks only the signed ID token from Google. The app does not use a server-side OAuth exchange.
+
+The client ID is not secret data. The page contains the client ID directly. Put the client ID in `config.yml`. Use the key `google_client_id`.
+
+### 3. Config
+
+The `config.yml` file contains the settings for the app:
 
 ```yaml
 app_title: "Gem Notes"
 table_name: "hours"
-total_hours_goal: 4000
-therapy_hours_goal: 1000
-relational_hours_goal: 500
-supervision_individual_goal: 150
-supervision_group_goal: 50
-admin_hours_goal: 2800
+google_client_id: "<client-id>.apps.googleusercontent.com"
 quotes:
   - "Your real quote here.<br>- Attribution"
 ```
 
-The goal defaults above reflect Minnesota's LMFT licensure requirements—edit them to match your own state board. Set any `*_goal` to `0` to drop that category from the app entirely. `table_name` is the Postgres table holding hour entries.
+The `table_name` value is the name of the Postgres table for hour entries. This file does not set licensure hour goals. Each user sets the goals of that user in the signup wizard, at the first sign-in. The app stores these goals in the `users` table. To remove a goal category, set the value of that category to `0`. Commit `config.yml` to the repository. Do not add material with copyright to `quotes`.
 
-### 3. Secrets
+### 4. Secrets
 
-There are two environment variables that are never stored in a file:
+This app uses one environment variable: `GEM_SUPA_PASS`. This variable is the password for the `db_user` value in `config.yml`. The function `RPostgres::Postgres()` uses this variable. Do not store this variable in a file.
 
-| Variable | Purpose |
-|---|---|
-| `GEM_PASS` | Shared password gating the app's UI |
-| `GEM_SUPA_PASS` | Password for the `db_user` set in `config.yml`, used by `RPostgres::Postgres()` |
+For local development, do this procedure:
 
-For local development, add them to a `.Renviron` file at the project root (gitignored) and restart R. The `usethis::edit_r_environ("project")` function creates/opens the project-level `.Renviron` for you:
+1. Run `usethis::edit_r_environ("project")` to create or open the `.Renviron` file in the project root directory. Git ignores this file.
+2. Add this line to the file:
 
 ```
-GEM_PASS=app-password
 GEM_SUPA_PASS=db-password
 ```
+
+3. Restart R.
 
 ## Running locally
 
@@ -123,19 +181,10 @@ shiny::runApp()
 
 ## Deploying to Posit Connect Cloud
 
-1. Install [Posit Publisher](https://github.com/posit-dev/publisher) (included in Positron; or use VS Code extension or CLI).
-2. Start a new deployment, targeting **Connect Cloud**. Publisher writes `.posit/publish/*.toml`; confirm/add `config_prod.yml` under project files.
-3. Declare `GEM_PASS` and `GEM_SUPA_PASS` as secrets in that config, and set their values when prompted. Connect Cloud stores them encrypted and injects them as environment variables at runtime. If you are not prompted to set the values or miss it, let it error on deploy/publish, then set these variables on [https://connect.posit.cloud/](https://connect.posit.cloud/) under **Settings → Variables**. Hit republish, and enjoy using the app.
-
-
-### Security
-
-This app uses a single shared password (`GEM_PASS`) because only one or two people in the world will ever open it. It's not built to survive targeted attacks. Here's what that means in practice:
-
-- **What's at stake.** The database contains dates and hour counts; that's it. A worst-case breach means someone sees or deletes therapy hour totals, which is annoying but not dangerous.
-
-- **Use a strong password.** Automated scanners crawl public Connect Cloud URLs and try common passwords. Make `GEM_PASS` a random string of 16+ characters. There's no brute-force protection in the app, so a weak password is the single biggest risk.
-
-- **Scope your database role.** The default Supabase user is a superuser. The `gemnotes_app` role in the setup section limits access to just the `hours` table, so a leaked `GEM_SUPA_PASS` can only affect one table.
-
-- **Back up your data.** The "Export Report" tab includes a CSV dump of your data; download your data periodically and keep it somewhere safe. On the database side, Supabase offers point-in-time recovery on paid plans.
+1. Install [Posit Publisher](https://github.com/posit-dev/publisher). Positron includes Publisher. You can also use the VS Code extension or the CLI application.
+2. Start a new deployment. Select **Connect Cloud** as the target. Publisher writes the file `.posit/publish/*.toml`. Confirm that `config.yml` is in the list of project files.
+3. Declare `GEM_SUPA_PASS` as a secret in this configuration. Set the value when Publisher shows a prompt for it. Connect Cloud encrypts this value, and adds the value as an environment variable at runtime.
+4. If Publisher does not show a prompt, deploy the app and let the deployment fail.
+5. Go to [connect.posit.cloud](https://connect.posit.cloud/). Open **Settings → Variables**. Set the value there.
+6. Add your deployed app URL to the Authorized JavaScript origins of the Google OAuth client ID. Refer to step 2 in the Google Sign-In section above.
+7. Republish the app.

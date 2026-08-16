@@ -13,12 +13,7 @@ DEFAULTS <- list(
   db_name = "postgres",
   db_user = "postgres",
   table_name = "hours",
-  total_hours_goal = 4000,
-  therapy_hours_goal = 1000,
-  relational_hours_goal = 500,
-  supervision_individual_goal = 150,
-  supervision_group_goal = 50,
-  admin_hours_goal = 2800,
+  google_client_id = "",
   quotes = list(
     "I love you.<br>- Dylan Pieper",
     "You are loved.<br>- Dylan Pieper",
@@ -26,11 +21,9 @@ DEFAULTS <- list(
   )
 )
 
-#' Get app settings and licensure hour goals
-#' Prefers config_prod.yml (gitignored, self-contained) over config.yml when
-#' present, so it stands alone as the only config file needed on prod.
-#' A goal of 0 means that category isn't tracked and is omitted from the app
-#' @return Named list of settings, with hour goals coerced to integers
+#' Get global app settings (licensure hour goals now live per-user in the
+#' users table -- see R/users.R -- not here)
+#' @return Named list of settings
 #' @export
 get_config <- function() {
   path <- if (file.exists(PROD_CONFIG_PATH)) PROD_CONFIG_PATH else CONFIG_PATH
@@ -40,5 +33,6 @@ get_config <- function() {
 
   cfg <- read_yaml(path)
   cfg <- utils::modifyList(DEFAULTS, cfg)
-  lapply(cfg, function(x) if (is.character(x) || is.list(x)) x else as.integer(x))
+  cfg$db_port <- as.integer(cfg$db_port)
+  cfg
 }

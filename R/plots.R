@@ -21,6 +21,10 @@ server_plots <- function(input, output, session, authenticated, monthly_breakdow
       min_date <- as.Date(date_range$min_date)
       max_date <- as.Date(date_range$max_date)
 
+      if (is.na(min_date) || is.na(max_date)) {
+        return() # brand-new account, zero rows -- leave the slider at its default range
+      }
+
       months_range <- as.numeric(difftime(max_date, min_date, units = "days") / 30)
 
       updateSliderInput(
@@ -36,6 +40,26 @@ server_plots <- function(input, output, session, authenticated, monthly_breakdow
     req(authenticated(), monthly_breakdown())
 
     data <- monthly_breakdown()
+
+    if (nrow(data) == 0) {
+      return(
+        plot_ly() |> layout(
+          annotations = list(list(
+            text = "No hours logged yet",
+            showarrow = FALSE,
+            font = list(size = 16, color = "#999"),
+            xref = "paper",
+            yref = "paper",
+            x = 0.5,
+            y = 0.5,
+            xanchor = "center",
+            yanchor = "middle"
+          )),
+          xaxis = list(visible = FALSE),
+          yaxis = list(visible = FALSE)
+        )
+      )
+    }
 
     stacking_order <- c(
       "exam_prep",
@@ -165,6 +189,26 @@ server_plots <- function(input, output, session, authenticated, monthly_breakdow
     total_by_category <- total_by_category[non_zero_categories]
     colors_subset <- colors[non_zero_categories]
     labels_subset <- labels[non_zero_categories]
+
+    if (length(total_by_category) == 0) {
+      return(
+        plot_ly() |> layout(
+          annotations = list(list(
+            text = "No hours logged yet",
+            showarrow = FALSE,
+            font = list(size = 16, color = "#999"),
+            xref = "paper",
+            yref = "paper",
+            x = 0.5,
+            y = 0.5,
+            xanchor = "center",
+            yanchor = "middle"
+          )),
+          xaxis = list(visible = FALSE),
+          yaxis = list(visible = FALSE)
+        )
+      )
+    }
 
     size_order <- order(total_by_category, decreasing = TRUE)
     total_by_category <- total_by_category[size_order]
