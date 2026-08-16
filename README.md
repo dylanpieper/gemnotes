@@ -1,6 +1,6 @@
 # gemnotes
 
-A Shiny app for tracking clinical licensure hours—individual and relational therapy, supervision, consultation, and admin work—with configurable goals, hour entries/editing, data summaries, interactive visualizations, and report generation for supervisor sign-off. Multi-user, with Google Sign-In: each therapist gets their own private account and hours.
+A multi-user Shiny app for tracking clinical licensure hours with Google SSO. Each therapist gets their own private account.
 
 ## Story
 
