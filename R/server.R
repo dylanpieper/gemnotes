@@ -245,6 +245,14 @@ server <- function(
       value = cfg_now$supervision_group_goal
     )
     updateNumericInput(session, "acct_admin_hours_goal", value = cfg_now$admin_hours_goal)
+
+    if (cfg_now$relational_hours_goal > 0) {
+      shinyjs::show("hrs_wrapper_relational_couple")
+      shinyjs::show("hrs_wrapper_relational_family")
+    } else {
+      shinyjs::hide("hrs_wrapper_relational_couple")
+      shinyjs::hide("hrs_wrapper_relational_family")
+    }
   })
 
   observe({
@@ -567,16 +575,24 @@ server <- function(
     if (view == "therapy") {
       grand_total <- therapy$week$grand_total
       row_data <- therapy
+      track_relational <- user_cfg()$relational_hours_goal > 0
+      relational_expr <- if (track_relational) "relational_couple + relational_family" else "0"
+      couple_expr <- if (track_relational) "relational_couple" else "0"
+      family_expr <- if (track_relational) "relational_family" else "0"
 
       grand_total_query <- sprintf(
         "
       SELECT
         SUM(individual) as total_individual,
-        SUM(relational_couple + relational_family) as total_relational,
-        SUM(relational_couple) as total_couple,
-        SUM(relational_family) as total_family,
-        SUM(individual + relational_couple + relational_family) as total_all
+        SUM(%s) as total_relational,
+        SUM(%s) as total_couple,
+        SUM(%s) as total_family,
+        SUM(individual + %s) as total_all
       FROM %s",
+        relational_expr,
+        couple_expr,
+        family_expr,
+        relational_expr,
         tbl
       )
 
@@ -584,18 +600,6 @@ server <- function(
 
       individual_ratio <- round(
         totals$total_individual / totals$total_all * 100,
-        0
-      )
-      relational_ratio <- round(
-        totals$total_relational / totals$total_all * 100,
-        0
-      )
-      couple_ratio <- round(
-        totals$total_couple / totals$total_relational * 100,
-        0
-      )
-      family_ratio <- round(
-        totals$total_family / totals$total_relational * 100,
         0
       )
 
@@ -609,31 +613,47 @@ server <- function(
             utils$format_number(individual_ratio)
           )
         ),
-        div(
-          sprintf(
-            "Relational: %s hrs (%s%%)",
-            utils$format_number(totals$total_relational),
-            utils$format_number(relational_ratio)
+        if (track_relational) {
+          relational_ratio <- round(
+            totals$total_relational / totals$total_all * 100,
+            0
           )
-        ),
-        div(
-          class = "ms-3 mt-1",
-          style = "font-size: 0.9em;",
-          sprintf(
-            "Couple: %s hrs (%s%%)",
-            utils$format_number(totals$total_couple),
-            utils$format_number(couple_ratio)
+          couple_ratio <- round(
+            totals$total_couple / totals$total_relational * 100,
+            0
           )
-        ),
-        div(
-          class = "ms-3",
-          style = "font-size: 0.9em;",
-          sprintf(
-            "Family: %s hrs (%s%%)",
-            utils$format_number(totals$total_family),
-            utils$format_number(family_ratio)
+          family_ratio <- round(
+            totals$total_family / totals$total_relational * 100,
+            0
           )
-        )
+          tagList(
+            div(
+              sprintf(
+                "Relational: %s hrs (%s%%)",
+                utils$format_number(totals$total_relational),
+                utils$format_number(relational_ratio)
+              )
+            ),
+            div(
+              class = "ms-3 mt-1",
+              style = "font-size: 0.9em;",
+              sprintf(
+                "Couple: %s hrs (%s%%)",
+                utils$format_number(totals$total_couple),
+                utils$format_number(couple_ratio)
+              )
+            ),
+            div(
+              class = "ms-3",
+              style = "font-size: 0.9em;",
+              sprintf(
+                "Family: %s hrs (%s%%)",
+                utils$format_number(totals$total_family),
+                utils$format_number(family_ratio)
+              )
+            )
+          )
+        }
       )
     } else if (view == "other") {
       grand_total <- metrics$week$grand_total - therapy$week$grand_total

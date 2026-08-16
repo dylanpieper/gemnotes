@@ -64,6 +64,7 @@ hours_input_group <- function(cols) {
     class = "row gx-2",
     lapply(cols, function(col) {
       div(
+        id = paste0("hrs_wrapper_", col),
         class = "col-6 col-lg-4 mb-1",
         numericInput(
           paste0("hrs_", col),
