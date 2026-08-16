@@ -229,6 +229,55 @@ server <- function(
     updateNumericInput(session, "admin_hours_goal", value = max(0, admin))
   })
 
+  observeEvent(user_cfg(), {
+    cfg_now <- user_cfg()
+    updateNumericInput(session, "acct_total_hours_goal", value = cfg_now$total_hours_goal)
+    updateNumericInput(session, "acct_therapy_hours_goal", value = cfg_now$therapy_hours_goal)
+    updateNumericInput(session, "acct_relational_hours_goal", value = cfg_now$relational_hours_goal)
+    updateNumericInput(
+      session,
+      "acct_supervision_individual_goal",
+      value = cfg_now$supervision_individual_goal
+    )
+    updateNumericInput(
+      session,
+      "acct_supervision_group_goal",
+      value = cfg_now$supervision_group_goal
+    )
+    updateNumericInput(session, "acct_admin_hours_goal", value = cfg_now$admin_hours_goal)
+  })
+
+  observe({
+    req(
+      input$acct_total_hours_goal,
+      input$acct_therapy_hours_goal,
+      input$acct_supervision_individual_goal,
+      input$acct_supervision_group_goal
+    )
+    admin <- input$acct_total_hours_goal -
+      input$acct_therapy_hours_goal -
+      input$acct_supervision_individual_goal -
+      input$acct_supervision_group_goal
+    updateNumericInput(session, "acct_admin_hours_goal", value = max(0, admin))
+  })
+
+  observeEvent(input$save_goals, {
+    req(authenticated())
+
+    users$update_user_config(
+      pool,
+      user_id(),
+      total_hours_goal = input$acct_total_hours_goal,
+      therapy_hours_goal = input$acct_therapy_hours_goal,
+      relational_hours_goal = input$acct_relational_hours_goal,
+      supervision_individual_goal = input$acct_supervision_individual_goal,
+      supervision_group_goal = input$acct_supervision_group_goal,
+      admin_hours_goal = input$acct_admin_hours_goal
+    )
+    user_cfg(users$get_user_config(pool, user_id()))
+    showNotification("Goals saved.", type = "message")
+  })
+
   signup_waiter <- waiter::Waiter$new(
     id = "signup_wizard_container",
     html = waiter::spin_heart(),

@@ -389,6 +389,74 @@ account_ui <- div(
     div(
       class = "col-12 col-md-6",
       card(
+        card_header("Hour Tracking Goals"),
+        card_body(
+          p(
+            class = "text-muted small",
+            "Leave a category at 0 if you don't want to track it."
+          ),
+          div(
+            class = "row",
+            div(
+              class = "col-12 col-sm-6 col-md-4",
+              numericInput(
+                "acct_total_hours_goal",
+                "Total hours",
+                value = 0,
+                min = 0
+              )
+            ),
+            div(
+              class = "col-12 col-sm-6 col-md-4",
+              numericInput(
+                "acct_therapy_hours_goal",
+                "Therapy hours",
+                value = 0,
+                min = 0
+              )
+            ),
+            div(
+              class = "col-12 col-sm-6 col-md-4",
+              numericInput(
+                "acct_relational_hours_goal",
+                "Relational hours",
+                value = 0,
+                min = 0
+              )
+            ),
+            div(
+              class = "col-12 col-sm-6 col-md-4",
+              numericInput(
+                "acct_supervision_individual_goal",
+                "Individual supervision",
+                value = 0,
+                min = 0
+              )
+            ),
+            div(
+              class = "col-12 col-sm-6 col-md-4",
+              numericInput(
+                "acct_supervision_group_goal",
+                "Group supervision",
+                value = 0,
+                min = 0
+              )
+            ),
+            div(
+              class = "col-12 col-sm-6 col-md-4",
+              numericInput(
+                "acct_admin_hours_goal",
+                "Admin/other hours",
+                value = 0,
+                min = 0
+              )
+            )
+          ),
+          actionButton("save_goals", "Save Goals", class = "btn btn-primary")
+        )
+      ),
+      card(
+        class = "mt-4",
         card_header("Data Policy"),
         card_body(p(DATA_POLICY_TEXT))
       ),

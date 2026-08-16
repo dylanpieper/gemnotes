@@ -68,6 +68,29 @@ get_user_config <- function(pool, user_id) {
   )
 }
 
+#' Update the tracking goals for an existing user
+#' @param pool Database connection
+#' @param user_id UUID of the signed-in user
+#' @param total_hours_goal,therapy_hours_goal,relational_hours_goal,supervision_individual_goal,supervision_group_goal,admin_hours_goal Licensure goals
+#' @export
+update_user_config <- function(pool, user_id,
+                                total_hours_goal, therapy_hours_goal, relational_hours_goal,
+                                supervision_individual_goal, supervision_group_goal, admin_hours_goal) {
+  dbExecute(
+    pool,
+    "UPDATE users SET
+      total_hours_goal = $2, therapy_hours_goal = $3, relational_hours_goal = $4,
+      supervision_individual_goal = $5, supervision_group_goal = $6, admin_hours_goal = $7
+    WHERE id = $1",
+    params = list(
+      user_id,
+      total_hours_goal, therapy_hours_goal, relational_hours_goal,
+      supervision_individual_goal, supervision_group_goal, admin_hours_goal
+    )
+  )
+  invisible(NULL)
+}
+
 #' Permanently delete a user's account. Cascades to their hours rows via
 #' the hours.user_id foreign key (ON DELETE CASCADE) -- this is the "nuke" option.
 #' @param pool Database connection
