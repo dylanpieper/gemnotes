@@ -23,11 +23,11 @@ If you want to use this app to track your own hours toward licensure, head to [g
 Create a Supabase account and a project at [supabase.com](https://supabase.com/). Go to the SQL editor. Run this SQL command:
 
 ```sql
-create extension if not exists pgcrypto; -- for gen_random_uuid()
+create extension if not exists pgcrypto;
 
 create table public.users (
   id uuid primary key default gen_random_uuid(),
-  google_sub text not null unique,        -- Google's stable 'sub' claim
+  google_sub text not null unique,
   email text not null,
   name text,
   total_hours_goal integer not null default 4000,
