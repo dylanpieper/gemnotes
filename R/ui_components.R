@@ -158,17 +158,26 @@ track_hours_ui <- div(
             class = "compact-hours-form mb-3",
             open = "Clinical Hours",
             accordion_panel(
-              tagList("Clinical Hours", uiOutput("clinical_subtotal", inline = TRUE)),
+              tagList(
+                "Clinical Hours",
+                uiOutput("clinical_subtotal", inline = TRUE)
+              ),
               value = "Clinical Hours",
               hours_input_group(CLINICAL_COLS)
             ),
             accordion_panel(
-              tagList("Supervision Hours", uiOutput("supervision_subtotal", inline = TRUE)),
+              tagList(
+                "Supervision Hours",
+                uiOutput("supervision_subtotal", inline = TRUE)
+              ),
               value = "Supervision Hours",
               hours_input_group(SUPERVISION_COLS)
             ),
             accordion_panel(
-              tagList("Admin/Other Hours", uiOutput("other_subtotal", inline = TRUE)),
+              tagList(
+                "Admin/Other Hours",
+                uiOutput("other_subtotal", inline = TRUE)
+              ),
               value = "Admin/Other Hours",
               hours_input_group(OTHER_COLS)
             )
@@ -389,7 +398,7 @@ account_ui <- div(
         card_body(
           p(
             class = "text-muted mb-3",
-            "Download every row of your hours, all columns, no date or category filter. Use this for a complete backup."
+            "Download all of your data. Use this for a complete backup."
           ),
           downloadButton(
             "download_backup",
