@@ -96,7 +96,7 @@ server_plots <- function(input, output, session, authenticated, monthly_breakdow
       "case_notes" = "Case Notes",
       "session_plan" = "Session Planning",
       "emails" = "Emails",
-      "letters" = "Letters",
+      "letters" = "Mail / Letters",
       "staff_meetings" = "Staff Meetings",
       "cont_ed" = "Continuing Education",
       "exam_prep" = "Exam Preparation"
@@ -168,7 +168,7 @@ server_plots <- function(input, output, session, authenticated, monthly_breakdow
       "case_notes" = "Case Notes",
       "session_plan" = "Session Planning",
       "emails" = "Emails",
-      "letters" = "Letters",
+      "letters" = "Mail / Letters",
       "staff_meetings" = "Staff Meetings",
       "cont_ed" = "Continuing Education",
       "exam_prep" = "Exam Preparation"

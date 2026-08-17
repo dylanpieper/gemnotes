@@ -36,7 +36,7 @@ HOURS_CATEGORY_LABELS <- c(
   case_notes = "Case Notes",
   session_plan = "Session Planning",
   emails = "Emails",
-  letters = "Letters",
+  letters = "Mail / Letters",
   staff_meetings = "Staff Meetings",
   cont_ed = "Continuing Education",
   exam_prep = "Exam Preparation"
