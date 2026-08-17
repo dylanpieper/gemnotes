@@ -4,11 +4,11 @@ A multi-user Shiny app for tracking clinical licensure hours with Google SSO. Ea
 
 ## Story
 
-I built this app for my wife, Julia ❤️, so she could track her hours toward licensure. The process is arduous: therapists have to log thousands of hours across categories like individual and relational sessions, supervision, and administrative work before they can practice independently. This is the most important app I've ever built, because it's for the most important person to me. Building her tools is one of my love languages.
+I built this app for my wife, Julia ❤️, so she could track her hours toward licensure. She has to log thousands of hours before she can practice independently across categories like individual and relational sessions, supervision, and administrative work. This is the most important app I've ever built, because it's for the most important person to me. Building her tools is one of my love languages.
 
 ## Dear Therapists
 
-If you want to use this app to track your own hours toward licensure, head to [gemnotes](https://dylanpieper-gemnotes.share.connect.posit.cloud/) and sign in with your Google account; your data is private to you, and you can delete your account and everything in it at any time from the Account tab. Questions? Email me at dylanpieper@gmail.com.
+If you want to use this app to track your own hours toward licensure, go to [gemnotes](https://dylanpieper-gemnotes.share.connect.posit.cloud/) and sign in with your Google account. Your data is private to you, and you can delete your account and data at any time. Questions? Email me at dylanpieper@gmail.com.
 
 ## Requirements
 
