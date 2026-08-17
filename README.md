@@ -4,7 +4,7 @@ A multi-user Shiny app for tracking clinical licensure hours with Google SSO. Ea
 
 ## Story
 
-I built this app for my wife, Julia ❤️, so she could track her hours toward licensure. I knew I had to help when I saw how long and arduous the process to become a "real" therapist was, including all of the documentation and approval that was required. This is the most important app I've ever built, because it's for the most important person to me. Building her tools is one of my love languages.
+I built this app for my wife, Julia ❤️, so she could track her hours toward licensure. The process is arduous: therapists have to log thousands of hours across categories like individual and relational sessions, supervision, and administrative work before they can practice independently. This is the most important app I've ever built, because it's for the most important person to me. Building her tools is one of my love languages.
 
 ## Dear Therapists
 
