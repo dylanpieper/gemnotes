@@ -993,6 +993,13 @@ server <- function(
       return()
     }
 
+    if (any(values > 999.9)) {
+      output$entry_form_error <- renderUI(
+        div(class = "alert alert-danger mt-2", "Hours can't exceed 999.9.")
+      )
+      return()
+    }
+
     if (identical(input$entry_mode, "range")) {
       req(input$entry_range)
       start_date <- input$entry_range[1]

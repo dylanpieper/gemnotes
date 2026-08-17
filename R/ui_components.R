@@ -71,6 +71,7 @@ hours_input_group <- function(cols) {
           HOURS_CATEGORY_LABELS[[col]],
           value = 0,
           min = 0,
+          max = 999.9,
           step = 0.25
         )
       )
