@@ -966,7 +966,7 @@ server <- function(
     refresh_hours_entries()
     showNotification("Entry deleted", type = "message", duration = 3)
 
-    if (identical(editing_id(), id)) reset_entry_form()
+    if (!is.null(editing_id()) && editing_id() == id) reset_entry_form()
   })
 
   output$entry_form_error <- renderUI(NULL)
@@ -1016,7 +1016,9 @@ server <- function(
     was_editing <- !is.null(editing_id())
 
     if (!was_editing) {
-      db$insert_hours_entry(pool, tbl, start_date, end_date, values)
+      new_id <- db$insert_hours_entry(pool, tbl, start_date, end_date, values)
+      editing_id(new_id)
+      updateActionButton(session, "save_entry", label = "Update")
     } else {
       db$update_hours_entry(
         pool,
@@ -1029,7 +1031,8 @@ server <- function(
     }
 
     refresh_hours_entries()
-    reset_entry_form()
+    output$entry_form_error <- renderUI(NULL)
+
     showNotification(
       if (was_editing) "Entry updated" else "Entry saved",
       type = "message",
