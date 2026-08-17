@@ -473,7 +473,7 @@ account_ui <- div(
           downloadButton(
             "download_backup",
             "Export Data (CSV)",
-            class = "btn-outline-secondary"
+            class = "btn-primary"
           )
         )
       ),
