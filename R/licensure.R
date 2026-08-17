@@ -39,13 +39,13 @@ get_licensure_progress <- function(pool, tbl, user_cfg) {
 
       -- Admin/other hours (everything that's not therapy or supervision)
       SUM(consultation + case_notes + session_plan + emails + letters +
-          staff_meetings + cont_ed + exam_prep) as total_admin,
+          staff_meetings + cont_ed + exam_prep + travel + shopping + other) as total_admin,
 
       -- Grand total of all hours
       SUM(individual + %s +
           %s + %s + consultation +
           case_notes + session_plan + emails + letters +
-          staff_meetings + cont_ed + exam_prep) as grand_total
+          staff_meetings + cont_ed + exam_prep + travel + shopping + other) as grand_total
     FROM %s",
     relational_expr,
     relational_expr,

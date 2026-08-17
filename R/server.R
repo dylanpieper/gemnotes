@@ -501,7 +501,7 @@ server <- function(
           SUM(individual + relational_couple + relational_family +
               supervision_individual + supervision_group + consultation +
               case_notes + session_plan + emails + letters +
-              staff_meetings + cont_ed + exam_prep) as monthly_total
+              staff_meetings + cont_ed + exam_prep + travel + shopping + other) as monthly_total
         FROM %s
         WHERE start_date >= current_date - interval '3 months'
         GROUP BY date_trunc('month', start_date)
@@ -665,9 +665,9 @@ server <- function(
         SUM(supervision_group) as total_supervision_group,
         SUM(supervision_individual + supervision_group) as total_supervision,
         SUM(consultation + case_notes + session_plan + emails + letters +
-            staff_meetings + cont_ed + exam_prep) as total_admin,
+            staff_meetings + cont_ed + exam_prep + travel + shopping + other) as total_admin,
         SUM(supervision_individual + supervision_group + consultation + case_notes +
-            session_plan + emails + letters + staff_meetings + cont_ed + exam_prep) as total_all
+            session_plan + emails + letters + staff_meetings + cont_ed + exam_prep + travel + shopping + other) as total_all
       FROM %s",
         tbl
       )

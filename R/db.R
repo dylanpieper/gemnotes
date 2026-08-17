@@ -10,7 +10,7 @@ HOURS_CATEGORY_COLS <- c(
   "individual", "relational_couple", "relational_family",
   "supervision_individual", "supervision_group", "consultation",
   "case_notes", "session_plan", "emails", "letters",
-  "staff_meetings", "cont_ed", "exam_prep"
+  "staff_meetings", "cont_ed", "exam_prep", "travel", "shopping", "other"
 )
 
 #' Connects using host/port/dbname/user from config.yml (or config_prod.yml)
@@ -293,7 +293,7 @@ get_work_hours <- function(pool, tbl, period = "week", offset = 0, user_cfg) {
     SELECT SUM(individual + relational_couple + relational_family +
                supervision_individual + supervision_group + consultation +
                case_notes + session_plan + emails + letters +
-               staff_meetings + cont_ed + exam_prep) as grand_total
+               staff_meetings + cont_ed + exam_prep + travel + shopping + other) as grand_total
     FROM %s", tbl)
   grand_total_query <- mask_untracked(grand_total_query, "relational_couple", track_relational)
   grand_total_query <- mask_untracked(grand_total_query, "relational_family", track_relational)
@@ -322,7 +322,7 @@ get_work_hours <- function(pool, tbl, period = "week", offset = 0, user_cfg) {
           COALESCE(SUM(individual + relational_couple + relational_family +
               supervision_individual + supervision_group + consultation +
               case_notes + session_plan + emails + letters +
-              staff_meetings + cont_ed + exam_prep), 0) as total_hours,
+              staff_meetings + cont_ed + exam_prep + travel + shopping + other), 0) as total_hours,
           COALESCE(SUM(supervision_individual), 0) as supervision_individual_hours,
           COALESCE(SUM(supervision_group), 0) as supervision_group_hours
         FROM daily
@@ -339,7 +339,7 @@ get_work_hours <- function(pool, tbl, period = "week", offset = 0, user_cfg) {
             COALESCE(SUM(individual + relational_couple + relational_family +
                 supervision_individual + supervision_group + consultation +
                 case_notes + session_plan + emails + letters +
-                staff_meetings + cont_ed + exam_prep), 0) as weekly_total,
+                staff_meetings + cont_ed + exam_prep + travel + shopping + other), 0) as weekly_total,
             COALESCE(SUM(supervision_individual), 0) as weekly_supervision_individual,
             COALESCE(SUM(supervision_group), 0) as weekly_supervision_group
           FROM daily
@@ -361,7 +361,7 @@ get_work_hours <- function(pool, tbl, period = "week", offset = 0, user_cfg) {
           COALESCE(SUM(individual + relational_couple + relational_family +
               supervision_individual + supervision_group + consultation +
               case_notes + session_plan + emails + letters +
-              staff_meetings + cont_ed + exam_prep), 0) as total_hours,
+              staff_meetings + cont_ed + exam_prep + travel + shopping + other), 0) as total_hours,
           COALESCE(SUM(supervision_individual), 0) as supervision_individual_hours,
           COALESCE(SUM(supervision_group), 0) as supervision_group_hours
         FROM daily
@@ -378,7 +378,7 @@ get_work_hours <- function(pool, tbl, period = "week", offset = 0, user_cfg) {
             COALESCE(SUM(individual + relational_couple + relational_family +
                 supervision_individual + supervision_group + consultation +
                 case_notes + session_plan + emails + letters +
-                staff_meetings + cont_ed + exam_prep), 0) as monthly_total,
+                staff_meetings + cont_ed + exam_prep + travel + shopping + other), 0) as monthly_total,
             COALESCE(SUM(supervision_individual), 0) as monthly_supervision_individual,
             COALESCE(SUM(supervision_group), 0) as monthly_supervision_group
           FROM daily
@@ -399,7 +399,7 @@ get_work_hours <- function(pool, tbl, period = "week", offset = 0, user_cfg) {
         COALESCE(SUM(individual + relational_couple + relational_family +
             supervision_individual + supervision_group + consultation +
             case_notes + session_plan + emails + letters +
-            staff_meetings + cont_ed + exam_prep), 0) as total_hours,
+            staff_meetings + cont_ed + exam_prep + travel + shopping + other), 0) as total_hours,
         COALESCE(SUM(supervision_individual), 0) as supervision_individual_hours,
         COALESCE(SUM(supervision_group), 0) as supervision_group_hours,
         0 as avg_hours,
@@ -464,7 +464,10 @@ get_monthly_hours_breakdown <- function(pool, tbl, months = 0, user_cfg) {
         SUM(letters) as letters,
         SUM(staff_meetings) as staff_meetings,
         SUM(cont_ed) as cont_ed,
-        SUM(exam_prep) as exam_prep
+        SUM(exam_prep) as exam_prep,
+        SUM(travel) as travel,
+        SUM(shopping) as shopping,
+        SUM(other) as other
       FROM daily
       WHERE day >= '%s'
       GROUP BY date_trunc('month', day)
@@ -475,7 +478,7 @@ get_monthly_hours_breakdown <- function(pool, tbl, months = 0, user_cfg) {
       individual + relational_couple + relational_family +
       supervision_individual + supervision_group + consultation +
       case_notes + session_plan + emails + letters +
-      staff_meetings + cont_ed + exam_prep as total_hours
+      staff_meetings + cont_ed + exam_prep + travel + shopping + other as total_hours
     FROM monthly_data",
                      daily, start_date)
   } else {
@@ -496,7 +499,10 @@ get_monthly_hours_breakdown <- function(pool, tbl, months = 0, user_cfg) {
         SUM(letters) as letters,
         SUM(staff_meetings) as staff_meetings,
         SUM(cont_ed) as cont_ed,
-        SUM(exam_prep) as exam_prep
+        SUM(exam_prep) as exam_prep,
+        SUM(travel) as travel,
+        SUM(shopping) as shopping,
+        SUM(other) as other
       FROM daily
       GROUP BY date_trunc('month', day)
       ORDER BY date_trunc('month', day) ASC
@@ -506,7 +512,7 @@ get_monthly_hours_breakdown <- function(pool, tbl, months = 0, user_cfg) {
       individual + relational_couple + relational_family +
       supervision_individual + supervision_group + consultation +
       case_notes + session_plan + emails + letters +
-      staff_meetings + cont_ed + exam_prep as total_hours
+      staff_meetings + cont_ed + exam_prep + travel + shopping + other as total_hours
     FROM monthly_data", daily)
   }
 

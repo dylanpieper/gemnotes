@@ -84,6 +84,9 @@ create table public.hours (
   staff_meetings numeric(4, 1) not null default 0,
   cont_ed numeric(4, 1) not null default 0,
   exam_prep numeric(4, 1) not null default 0,
+  travel numeric(4, 1) not null default 0,
+  shopping numeric(4, 1) not null default 0,
+  other numeric(4, 1) not null default 0,
   constraint weekly_therapy_hours_case_notes_check check ((case_notes >= (0)::numeric)),
   constraint weekly_therapy_hours_consultation_check check ((consultation >= (0)::numeric)),
   constraint weekly_therapy_hours_cont_ed_check check ((cont_ed >= (0)::numeric)),
@@ -91,12 +94,15 @@ create table public.hours (
   constraint weekly_therapy_hours_exam_prep_check check ((exam_prep >= (0)::numeric)),
   constraint weekly_therapy_hours_individual_check check ((individual >= (0)::numeric)),
   constraint weekly_therapy_hours_letters_check check ((letters >= (0)::numeric)),
+  constraint weekly_therapy_hours_other_check check ((other >= (0)::numeric)),
   constraint weekly_therapy_hours_relational_couple_check check ((relational_couple >= (0)::numeric)),
   constraint weekly_therapy_hours_relational_family_check check ((relational_family >= (0)::numeric)),
   constraint weekly_therapy_hours_session_plan_check check ((session_plan >= (0)::numeric)),
+  constraint weekly_therapy_hours_shopping_check check ((shopping >= (0)::numeric)),
   constraint weekly_therapy_hours_staff_meetings_check check ((staff_meetings >= (0)::numeric)),
   constraint weekly_therapy_hours_supervision_group_check check ((supervision_group >= (0)::numeric)),
-  constraint weekly_therapy_hours_supervision_individual_check check ((supervision_individual >= (0)::numeric))
+  constraint weekly_therapy_hours_supervision_individual_check check ((supervision_individual >= (0)::numeric)),
+  constraint weekly_therapy_hours_travel_check check ((travel >= (0)::numeric))
 ) TABLESPACE pg_default;
 
 alter table public.hours enable row level security;
@@ -104,6 +110,18 @@ alter table public.hours enable row level security;
 create policy hours_user_scoped on public.hours
   using (user_id = nullif(current_setting('app.user_id', true), '')::uuid)
   with check (user_id = nullif(current_setting('app.user_id', true), '')::uuid);
+```
+
+If you already created the `hours` table before this app had `travel`, `shopping`, and `other` categories, run this instead of recreating the table:
+
+```sql
+alter table public.hours
+  add column travel numeric(4, 1) not null default 0,
+  add column shopping numeric(4, 1) not null default 0,
+  add column other numeric(4, 1) not null default 0,
+  add constraint weekly_therapy_hours_travel_check check ((travel >= (0)::numeric)),
+  add constraint weekly_therapy_hours_shopping_check check ((shopping >= (0)::numeric)),
+  add constraint weekly_therapy_hours_other_check check ((other >= (0)::numeric));
 ```
 
 The `nullif(..., '')` function is important here. Some connection poolers send an empty string for a session variable that is not set. They do not send a null value. A direct conversion of an empty string to a `uuid` value causes an error. A conversion of a null value to a `uuid` value does not cause an error. This method makes sure that a connection before sign-in gets zero rows, and not an error.

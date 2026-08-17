@@ -62,6 +62,9 @@ server_plots <- function(input, output, session, authenticated, monthly_breakdow
     }
 
     stacking_order <- c(
+      "other",
+      "shopping",
+      "travel",
       "exam_prep",
       "cont_ed",
       "staff_meetings",
@@ -77,13 +80,13 @@ server_plots <- function(input, output, session, authenticated, monthly_breakdow
       "individual"
     )
 
-    cassatt_colors <- met.brewer("Signac", 13, "continuous")
+    cassatt_colors <- met.brewer("Signac", 16, "continuous")
 
     colors <- setNames(cassatt_colors, c(
       "individual", "relational_couple", "relational_family",
       "supervision_individual", "supervision_group", "consultation",
       "case_notes", "session_plan", "emails", "letters",
-      "staff_meetings", "cont_ed", "exam_prep"
+      "staff_meetings", "cont_ed", "exam_prep", "travel", "shopping", "other"
     ))
 
     labels <- c(
@@ -99,7 +102,10 @@ server_plots <- function(input, output, session, authenticated, monthly_breakdow
       "letters" = "Mail / Letters",
       "staff_meetings" = "Staff Meetings",
       "cont_ed" = "Continuing Education",
-      "exam_prep" = "Exam Preparation"
+      "exam_prep" = "Exam Preparation",
+      "travel" = "Travel",
+      "shopping" = "Shopping",
+      "other" = "Other"
     )
 
     data <- data[order(data$month, decreasing = FALSE), ]
@@ -149,13 +155,13 @@ server_plots <- function(input, output, session, authenticated, monthly_breakdow
 
     data <- monthly_breakdown()
 
-    cassatt_colors <- met.brewer("Signac", 13, "continuous")
+    cassatt_colors <- met.brewer("Signac", 16, "continuous")
 
     colors <- setNames(cassatt_colors, c(
       "individual", "relational_couple", "relational_family",
       "supervision_individual", "supervision_group", "consultation",
       "case_notes", "session_plan", "emails", "letters",
-      "staff_meetings", "cont_ed", "exam_prep"
+      "staff_meetings", "cont_ed", "exam_prep", "travel", "shopping", "other"
     ))
 
     labels <- c(
@@ -171,14 +177,17 @@ server_plots <- function(input, output, session, authenticated, monthly_breakdow
       "letters" = "Mail / Letters",
       "staff_meetings" = "Staff Meetings",
       "cont_ed" = "Continuing Education",
-      "exam_prep" = "Exam Preparation"
+      "exam_prep" = "Exam Preparation",
+      "travel" = "Travel",
+      "shopping" = "Shopping",
+      "other" = "Other"
     )
 
     hour_columns <- c(
       "individual", "relational_couple", "relational_family",
       "supervision_individual", "supervision_group", "consultation",
       "case_notes", "session_plan", "emails", "letters",
-      "staff_meetings", "cont_ed", "exam_prep"
+      "staff_meetings", "cont_ed", "exam_prep", "travel", "shopping", "other"
     )
 
     total_by_category <- sapply(hour_columns, function(cat) {

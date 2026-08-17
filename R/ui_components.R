@@ -39,7 +39,10 @@ HOURS_CATEGORY_LABELS <- c(
   letters = "Mail / Letters",
   staff_meetings = "Staff Meetings",
   cont_ed = "Continuing Education",
-  exam_prep = "Exam Preparation"
+  exam_prep = "Exam Preparation",
+  travel = "Travel",
+  shopping = "Shopping",
+  other = "Other"
 )
 
 #' @export
@@ -55,7 +58,10 @@ OTHER_COLS <- c(
   "letters",
   "staff_meetings",
   "cont_ed",
-  "exam_prep"
+  "exam_prep",
+  "travel",
+  "shopping",
+  "other"
 )
 
 #' A group of numericInputs, one per hours category column, 3 per row

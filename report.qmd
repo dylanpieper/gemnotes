@@ -50,7 +50,10 @@ groups <- list(
       letters = "Mail / Letters",
       staff_meetings = "Staff Meetings",
       cont_ed = "Continuing Education",
-      exam_prep = "Exam Preparation"
+      exam_prep = "Exam Preparation",
+      travel = "Travel",
+      shopping = "Shopping",
+      other = "Other"
     )
   )
 )
